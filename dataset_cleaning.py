@@ -32,7 +32,7 @@ def clean_dataset(input_file, output_file, num_sentences=29):
 
     #Save the final curated dataset
     columns_to_save = ['path','sentence', 'english_translation', 'categories','up_votes']
-    processed_df[columns_to_save].to_csv(output_file, index=False)
+    processed_df[columns_to_save].to_csv(output_file, index=False, encoding='utf-8-sig')
 
 if __name__ == "__main__":
-    clean_dataset('validated.tsv', 'k_read_coach_dataset.csv')
+    clean_dataset('validated.tsv', 'data/k_read_coach_dataset.csv')
