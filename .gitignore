@@ -1,3 +1,8 @@
 venv/
+*.tsv
 __pycache__/
 .DS_Store
+
+# Track only our curated audio
+data/clips/*
+!data/clips/*.mp3
