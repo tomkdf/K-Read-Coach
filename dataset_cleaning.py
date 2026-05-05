@@ -1,13 +1,37 @@
+"""
+Dataset Cleaning Script for K-Read Coach
+
+This script processes a Korean speech transcript dataset to create a curated subset
+of daily conversation sentences suitable for language learning applications.
+It filters transcripts based on relevant keywords, categorizes them by topic,
+and outputs a clean CSV file with Korean sentences, English translations, and categories.
+"""
+
 import pandas as pd
 import os
 
 def process_dataset(transcript_file, output_file, num_sentences=29):
-    # We name the columns based on the format you provided
+    """
+    Process the raw transcript file to create a filtered dataset.
+    
+    Args:
+        transcript_file (str): Path to the input transcript CSV file
+        output_file (str): Path where the processed dataset will be saved
+        num_sentences (int): Number of sentences to sample (default: 29)
+    
+    Returns:
+        None: Saves the processed dataset to output_file
+    """
+    # Define column names for the transcript file
+    # Expected format: path|original|script|expanded|duration|english_translation
     cols = ['path', 'original', 'script', 'expanded', 'duration', 'english_translation']
     
+    # Load the transcript data
     df = pd.read_csv(transcript_file, sep='|', names=cols, header=None, encoding='utf-8')
 
     # --- THEMES FILTER ---
+    # Define keywords for filtering daily conversation topics
+    # These Korean words represent common everyday situations
     
     keywords = [
         # School & Education
@@ -33,14 +57,15 @@ def process_dataset(transcript_file, output_file, num_sentences=29):
     ]
     
     
+    # Create regex pattern from keywords and filter rows containing any keyword
     pattern = '|'.join(keywords)
     daily_df = df[df['original'].str.contains(pattern, na=False)].copy()
 
-    # Filter for reasonable length (between 10 and 30 characters)
+    # Filter for reasonable sentence length (5-20 characters for learning purposes)
     daily_df['text_length'] = daily_df['original'].str.len()
     filtered_df = daily_df[(daily_df['text_length'] >= 5) & (daily_df['text_length'] <= 20)]
 
-    # Take 29 random samples
+    # Randomly sample the specified number of sentences
     if len(filtered_df) >= num_sentences:
         processed_df = filtered_df.sample(n=num_sentences, random_state=42).copy()
     else:
@@ -48,6 +73,15 @@ def process_dataset(transcript_file, output_file, num_sentences=29):
 
     # Add Categories based on keywords (Optional but helpful)
     def categorize(text):
+        """
+        Categorize a Korean sentence based on its content keywords.
+        
+        Args:
+            text (str): The Korean sentence to categorize
+            
+        Returns:
+            str: Category name
+        """
         # Food & Dining
         if any(word in text for word in ['점심', '식당', '주문', '계란', '포장', '배불러']):
             return 'Food & Dining'
@@ -79,16 +113,18 @@ def process_dataset(transcript_file, output_file, num_sentences=29):
         # Default category
         return 'Daily Life'
 
+    # Apply categorization to each sentence
     processed_df['categories'] = processed_df['original'].apply(categorize)
 
-    # Save to your project format
+    # Prepare final dataset with required columns
     # Note: KSS paths often look like '1/1_0000.wav', ensure your folder structure matches
     final_df = processed_df[['path', 'original', 'english_translation', 'categories']]
     final_df.columns = ['path', 'sentence', 'english_translation', 'categories']
     
+    # Save the processed dataset
     final_df.to_csv(output_file, index=False, encoding='utf-8-sig')
     print(f"✅ Created dataset with {len(final_df)} high-quality daily sentences.")
 
 if __name__ == "__main__":
-    # Point this to your transcript file
+    # Main execution: process the transcript file and create the dataset
     process_dataset('transcript.txt', 'data/k_read_coach_dataset.csv')
