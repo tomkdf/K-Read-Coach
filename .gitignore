@@ -1,8 +1,32 @@
+# --- Python Virtual Environment & System ---
 venv/
-*.tsv
+env/
 __pycache__/
+*.py[cod]
+*$py.class
 .DS_Store
+.env
+.vscode/
+.idea/
 
-# Track only our curated audio
+# --- Large Raw Datasets (Do NOT upload to GitHub) ---
+# This ignores the massive original folder and the Common Voice file
+kss_raw/
+validated.tsv
+archive/
+*.zip
+*.tar.gz
+*.rar
+
+# --- Audio Clips Management ---
+# We want to ignore ALL files in the clips folder by default...
 data/clips/*
-!data/clips/*.mp3
+
+# ...BUT we make an exception to KEEP your 29 .wav files.
+# This ensures only the small, curated files are uploaded.
+!data/clips/*.wav
+
+# --- Project Temporary Files ---
+logs/
+results/
+temp/
