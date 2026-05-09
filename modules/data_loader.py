@@ -4,7 +4,7 @@ import os
 
 def get_mock_dataset() -> pd.DataFrame:
     data = {
-        'path': ['data/clips/greeting_01.wav', 'data/clips/school_01.wav'],
+        'path': ['greeting_01.wav', 'school_01.wav'],
         'sentence': ['안녕하세요', '학교에 갑니다'],
         'english_translation': ['Hello', 'I go to school'],
         'categories': ['Greeting', 'School']
