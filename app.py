@@ -70,13 +70,13 @@ with st.sidebar:
     selected_category = st.selectbox("TOPIC", categories)
 
     sentences_df = get_sentences_by_category(df, selected_category)
+    if sentences_df.empty:
+        st.error("No sentences found for this category.")
+        st.stop()
     selected_sentence = st.selectbox("SENTENCE", sentences_df["sentence"].tolist())
 
 st.header("Practice Session")
 
-if sentences_df.empty:
-    st.error("No sentences found for this category.")
-    st.stop()
 row = sentences_df[sentences_df["sentence"] == selected_sentence].iloc[0]
 target_sentence = row["sentence"]
 
@@ -116,12 +116,15 @@ if analyze:
         try:
             with st.spinner("Analyzing your reading..."):
                 path = save_uploaded_file(uploaded_file)
-                recognized = transcribe_audio(path)
-                if not recognized:
-                    st.warning("Could not recognize speech. Please check your audio and try again.")
-                    st.stop()
-                result = compare_texts(target_sentence, recognized)
-                feedback = generate_feedback(result["score"])
+                try:
+                    recognized = transcribe_audio(path)
+                    if not recognized:
+                        st.warning("Could not recognize speech. Please check your audio and try again.")
+                        st.stop()
+                    result = compare_texts(target_sentence, recognized)
+                    feedback = generate_feedback(result["score"])
+                finally:
+                    Path(path).unlink(missing_ok=True)
 
             st.subheader("Results")
             st.write(f"**Recognized Text:** {result['recognized']}")
