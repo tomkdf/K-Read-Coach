@@ -1,3 +1,4 @@
+import html
 import time
 from pathlib import Path
 import streamlit as st
@@ -73,15 +74,22 @@ with st.sidebar:
 
 st.header("Practice Session")
 
+if sentences_df.empty:
+    st.error("No sentences found for this category.")
+    st.stop()
 row = sentences_df[sentences_df["sentence"] == selected_sentence].iloc[0]
 target_sentence = row["sentence"]
 
-st.markdown(f'<div class="sentence-card">{target_sentence}</div>', unsafe_allow_html=True)
+st.markdown(f'<div class="sentence-card">{html.escape(target_sentence)}</div>', unsafe_allow_html=True)
 
 st.write(f"**English:** {row['english_translation']}")
 
 st.subheader("Reference Audio")
-reference_audio_path = Path(CLIPS_DIR) / row["path"]
+reference_audio_path = (Path(CLIPS_DIR) / row["path"]).resolve()
+clips_base = Path(CLIPS_DIR).resolve()
+if not str(reference_audio_path).startswith(str(clips_base)):
+    st.error("Invalid audio path detected.")
+    st.stop()
 if is_real_dataset and reference_audio_path.exists():
     st.audio(str(reference_audio_path))
 elif is_real_dataset:
@@ -109,13 +117,16 @@ if analyze:
             with st.spinner("Analyzing your reading..."):
                 path = save_uploaded_file(uploaded_file)
                 recognized = transcribe_audio(path)
+                if not recognized:
+                    st.warning("Could not recognize speech. Please check your audio and try again.")
+                    st.stop()
                 result = compare_texts(target_sentence, recognized)
                 feedback = generate_feedback(result["score"])
 
             st.subheader("Results")
             st.write(f"**Recognized Text:** {result['recognized']}")
             st.write("**Score:**")
-            st.progress(int(result["score"]) / 100)
+            st.progress(max(0.0, min(1.0, result["score"] / 100)))
             st.write(f"{result['score']:.1f} / 100")
             st.write(f"**Feedback:** {feedback}")
         except Exception as e:
