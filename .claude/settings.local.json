@@ -1,0 +1,14 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(python -c \"from modules.data_loader import get_mock_dataset; print\\(get_mock_dataset\\(\\)['path'].tolist\\(\\)\\)\")",
+      "Bash(pip install *)",
+      "PowerShell(python -m pip install -q pandas)",
+      "Bash(git add *)",
+      "Bash(git commit *)",
+      "Bash(git -C \"D:/K-Read-Coach\" add app.py)",
+      "Bash(git -C \"D:/K-Read-Coach\" commit -m \"feat: implement Streamlit frontend with CSS styling and full analysis flow\")",
+      "Bash(ls -la \"D:\\\\K-Read-Coach\\\\\" | head -20)"
+    ]
+  }
+}
