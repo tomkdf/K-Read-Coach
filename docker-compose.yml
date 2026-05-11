@@ -1,0 +1,10 @@
+version: '3.8'
+
+services:
+  whisper-app:
+    build: .
+    volumes:
+      - ./data:/data
+      - .:/app
+    environment:
+      - PYTHONIOENCODING=utf-8

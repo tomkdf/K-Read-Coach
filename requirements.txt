@@ -1,0 +1,6 @@
+faster-whisper
+ffmpeg-python
+Levenshtein
+jamo
+pandas
+setuptools
