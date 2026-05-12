@@ -1,34 +1,18 @@
-"""
-ASR (Automatic Speech Recognition) Interface Module
+from faster_whisper import WhisperModel
+import streamlit as st
 
-This module provides the transcription interface for the K-Read Coach application.
-Currently a mock implementation that returns a fixed Korean greeting.
-
-ASR Implementation Guide:
-  To replace this mock implementation with actual ASR functionality:
-  1. Keep the function signature: transcribe_audio(audio_path: str) -> str
-  2. Replace the function body with your actual ASR logic
-  3. No changes needed in app.py or other modules - this interface is self-contained
-  4. The function should accept an audio file path and return the transcribed text as a string
-"""
-
+# On charge le modèle une seule fois (cache)
+@st.cache_resource
+def get_model():
+    # "small" est rapide, "int8" réduit la consommation de mémoire
+    return WhisperModel("small", device="cpu", compute_type="int8")
 
 def transcribe_audio(audio_path: str) -> str:
-    """
-    Transcribe audio file to text.
-
-    Mock Implementation:
-      Currently returns a fixed Korean greeting regardless of input.
-      This serves as a placeholder until actual ASR implementation is integrated.
-
-    Args:
-        audio_path: Path to the audio file (currently ignored in mock mode)
-
-    Returns:
-        Transcribed text as a string. In mock mode, always returns "안녕하세요"
-
-    Note:
-        ASR team: Replace the return statement below with your ASR implementation.
-        The function signature and return type must remain unchanged.
-    """
-    return "안녕하세요"
+    if not audio_path:
+        return ""
+    
+    model = get_model()
+    # Transcription forcée en coréen
+    segments, _ = model.transcribe(audio_path, language="ko")
+    # On rassemble les morceaux de texte
+    return "".join([s.text for s in segments]).strip()
