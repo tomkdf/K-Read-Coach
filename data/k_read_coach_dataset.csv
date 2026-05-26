@@ -1,30 +1,30 @@
-﻿path,sentence,english_translation,categories
-3_3106.wav,저는 어제 출소했습니다.,I was released from prison yesterday.,Time
-4_0162.wav,와! 이 백화점 진짜 크다!,Wow! This department store is huge!,Shopping & Fashion
-1_0442.wav,어떤 옷을 입어야 해요?,Which clothes should I wear?,Shopping & Fashion
-4_5593.wav,요즈음 어떻게 지내?,How's everything going these days?,Daily Life
-2_0492.wav,배가 불러 더 이상은 못 먹겠어요.,I'm so full that I can't eat another bite.,Daily Life
-3_4029.wav,오늘은 꼭 날씨가 봄 같아.,Today's weather is like spring.,Weather
-4_2415.wav,이 영화는 시간 죽이기에 좋아요.,This movie is good for killing time.,Time
-4_0503.wav,불만이 있으면 지금 말해.,Speak up now if you have any complaints.,Daily Life
-4_2066.wav,어제 경기는 겨우 이겼어요.,We scored a narrow win in yesterday's match.,Time
-4_4602.wav,성함이 어떻게 되시죠?,"Can I have your name, please?",Time
-4_1184.wav,이 옷은 꼭 뒤집어서 말려 주세요.,Please make sure you dry this inside out.,Shopping & Fashion
-4_1688.wav,세상에. 그래서 어떻게 했니?,Oh my god. So what did you do?,Social & Emotions
-3_3930.wav,기온이 어제보다 15도 떨어졌어요.,The temperature has dropped 15 degrees since yesterday.,Weather
-4_0908.wav,달걀은 어떻게 해 드릴까요?,How would you like your eggs?,Daily Life
-2_0824.wav,오늘 옷차림이 정말 우아하시네요.,You are dressed so gracefully today.,Time
-3_1964.wav,포장해 드릴까요?,Shall I wrap it up for you?,Food & Dining
-4_3235.wav,주문하시겠습니까?,Are you ready to order?,Food & Dining
-4_3253.wav,점심때 중국집 갈까?,How about having lunch at a Chinese restaurant?,Food & Dining
-3_0383.wav,청소기 어디에 뒀어?,Where did you put the vacuum cleaner?,Transportation
-4_1939.wav,정기 국회가 내일 열립니다.,The regular session of the National Assembly opens tomorrow.,School & Work
-2_0071.wav,머리를 건조한 상태로 유지하세요.,Keep your hair dry.,Daily Life
-1_0595.wav,오늘 일은 다 끝냈어?,Have you done your work today?,School & Work
-3_4248.wav,오늘이 음력으로 며칠이지?,What day is it on the lunar calendar?,Time
-3_4378.wav,길이가 얼마나 됩니까?,How long is it?,Shopping & Fashion
-4_0638.wav,언제 정신 차릴래?,When will you come to your senses?,Social & Emotions
-3_0622.wav,이 버스가 서울역을 지나가나요?,Does this bus pass by Seoul Station?,Transportation
-3_3773.wav,이 근처에 버스 정류장이 있습니까?,Is there a bus stop near here?,Transportation
-4_2375.wav,이 꽃은 향기가 좋아요.,This flower has a nice fragrance.,Shopping & Fashion
-4_0447.wav,그냥 보통 때처럼 학교로 나오세요.,Just come to school as usual.,School & Work
+﻿path,sentence,english_translation,russian_translation,categories
+3_3106.wav,저는 어제 출소했습니다.,I was released from prison yesterday.,Вчера меня выпустили из тюрьмы.,Time
+4_0162.wav,와! 이 백화점 진짜 크다!,Wow! This department store is huge!,Ух ты! Этот универмаг огромен!,Shopping & Fashion
+1_0442.wav,어떤 옷을 입어야 해요?,Which clothes should I wear?,Какую одежду мне следует носить?,Shopping & Fashion
+4_5593.wav,요즈음 어떻게 지내?,How's everything going these days?,Как дела обстоят в эти дни?,Daily Life
+2_0492.wav,배가 불러 더 이상은 못 먹겠어요.,I'm so full that I can't eat another bite.,"Я настолько сыт, что не могу съесть ни кусочка.",Daily Life
+3_4029.wav,오늘은 꼭 날씨가 봄 같아.,Today's weather is like spring.,Погода сегодня похожа на весну.,Weather
+4_2415.wav,이 영화는 시간 죽이기에 좋아요.,This movie is good for killing time.,"Этот фильм хорош для того, чтобы убить время.",Time
+4_0503.wav,불만이 있으면 지금 말해.,Speak up now if you have any complaints.,"Если у вас есть жалобы, говорите прямо сейчас.",Daily Life
+4_2066.wav,어제 경기는 겨우 이겼어요.,We scored a narrow win in yesterday's match.,Во вчерашнем матче мы одержали небольшую победу.,Time
+4_4602.wav,성함이 어떻게 되시죠?,"Can I have your name, please?","Можно мне ваше имя, пожалуйста?",Time
+4_1184.wav,이 옷은 꼭 뒤집어서 말려 주세요.,Please make sure you dry this inside out.,"Пожалуйста, убедитесь, что вы высушили это наизнанку.",Shopping & Fashion
+4_1688.wav,세상에. 그래서 어떻게 했니?,Oh my god. So what did you do?,Боже мой. Так что ты сделал?,Social & Emotions
+3_3930.wav,기온이 어제보다 15도 떨어졌어요.,The temperature has dropped 15 degrees since yesterday.,Со вчерашнего дня температура упала на 15 градусов.,Weather
+4_0908.wav,달걀은 어떻게 해 드릴까요?,How would you like your eggs?,Как вам яйца?,Daily Life
+2_0824.wav,오늘 옷차림이 정말 우아하시네요.,You are dressed so gracefully today.,Вы сегодня так изящно одеты.,Time
+3_1964.wav,포장해 드릴까요?,Shall I wrap it up for you?,Должен ли я закончить это для вас?,Food & Dining
+4_3235.wav,주문하시겠습니까?,Are you ready to order?,Вы готовы сделать заказ?,Food & Dining
+4_3253.wav,점심때 중국집 갈까?,How about having lunch at a Chinese restaurant?,Как насчет обеда в китайском ресторане?,Food & Dining
+3_0383.wav,청소기 어디에 뒀어?,Where did you put the vacuum cleaner?,Куда ты поставил пылесос?,Transportation
+4_1939.wav,정기 국회가 내일 열립니다.,The regular session of the National Assembly opens tomorrow.,Завтра откроется очередная сессия Национального собрания.,School & Work
+2_0071.wav,머리를 건조한 상태로 유지하세요.,Keep your hair dry.,Держите волосы сухими.,Daily Life
+1_0595.wav,오늘 일은 다 끝냈어?,Have you done your work today?,Ты сделал свою работу сегодня?,School & Work
+3_4248.wav,오늘이 음력으로 며칠이지?,What day is it on the lunar calendar?,Какой сегодня день по лунному календарю?,Time
+3_4378.wav,길이가 얼마나 됩니까?,How long is it?,Сколько времени?,Shopping & Fashion
+4_0638.wav,언제 정신 차릴래?,When will you come to your senses?,Когда ты придешь в себя?,Social & Emotions
+3_0622.wav,이 버스가 서울역을 지나가나요?,Does this bus pass by Seoul Station?,Этот автобус проходит мимо вокзала Сеула?,Transportation
+3_3773.wav,이 근처에 버스 정류장이 있습니까?,Is there a bus stop near here?,Здесь рядом есть автобусная остановка?,Transportation
+4_2375.wav,이 꽃은 향기가 좋아요.,This flower has a nice fragrance.,Этот цветок имеет приятный аромат.,Shopping & Fashion
+4_0447.wav,그냥 보통 때처럼 학교로 나오세요.,Just come to school as usual.,"Просто приходи в школу, как обычно.",School & Work

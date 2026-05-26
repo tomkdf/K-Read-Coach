@@ -18,7 +18,7 @@ def load_dataset(csv_path: str) -> tuple[pd.DataFrame, bool]:
 
     df = pd.read_csv(csv_path)
 
-    required_fields = ['path', 'sentence', 'english_translation', 'categories']
+    required_fields = ['path', 'sentence', 'english_translation', 'russian_translation', 'categories']
     missing_fields = sorted(set(required_fields) - set(df.columns))
 
     if missing_fields:
