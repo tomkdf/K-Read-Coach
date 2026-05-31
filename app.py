@@ -54,6 +54,13 @@ def load_data():
 
 df, is_real_dataset = load_data()
 
+# --- GESTION DES PARAMÈTRES D'URL AVANT LA SIDEBAR ---
+query_params = st.query_params
+
+# On récupère la catégorie et la phrase depuis l'URL si elles existent
+url_category = query_params.get("category", None)
+url_sentence = query_params.get("sentence", None)
+
 with st.sidebar:
     st.title("K-Read Coach")
     st.caption("Korean Read-Aloud Practice")
@@ -62,13 +69,27 @@ with st.sidebar:
         st.warning("Using mock data — place k_read_coach_dataset.csv in data/")
 
     categories = get_categories(df)
-    selected_category = st.selectbox("TOPIC", categories)
+    
+    # Détermination de l'index de la catégorie
+    default_cat_idx = 0
+    if url_category in categories:
+        default_cat_idx = categories.index(url_category)
+        
+    selected_category = st.selectbox("TOPIC", categories, index=default_cat_idx)
 
     sentences_df = get_sentences_by_category(df, selected_category)
     if sentences_df.empty:
         st.error("No sentences found for this category.")
         st.stop()
-    selected_sentence = st.selectbox("SENTENCE", sentences_df["sentence"].tolist())
+        
+    sentences_list = sentences_df["sentence"].tolist()
+    
+    # Détermination de l'index de la phrase
+    default_sent_idx = 0
+    if url_sentence in sentences_list:
+        default_sent_idx = sentences_list.index(url_sentence)
+        
+    selected_sentence = st.selectbox("SENTENCE", sentences_list, index=default_sent_idx)
 
 st.header("Practice Session")
 
@@ -95,18 +116,22 @@ else:
 
 st.subheader("Your Reading")
 
-# --- GESTION DE LA MÉMOIRE DE L'ENREGISTREMENT (SESSION STATE) ---
+# --- GESTION DE LA MÉMOIRE DE L'ENREGISTREMENT ---
 if "saved_audio_base64" not in st.session_state:
     st.session_state["saved_audio_base64"] = ""
 
-# Intercepter l'audio qui arrive de l'URL (Query Parameters)
-query_params = st.query_params
+# Si l'audio est dans l'URL, on le capture en mémoire
 if "audio_data" in query_params:
     st.session_state["saved_audio_base64"] = query_params["audio_data"]
-    st.query_params.clear() # On nettoie l'URL proprement
+    # On nettoie l'audio de l'URL pour éviter les boucles mais on garde category et sentence !
+    st.query_params.update({"category": selected_category, "sentence": selected_sentence})
 
-# 1. TON Enregistreur HTML/JS (Fait juste Start/Stop)
-components.html("""
+# 1. ENREGISTREUR HTML/JS MIS À JOUR
+# On passe dynamiquement la catégorie et la phrase courante au JavaScript
+js_category = selected_category.replace("'", "\\'")
+js_sentence = selected_sentence.replace("'", "\\'")
+
+components.html(f"""
 <div id="recorder-container" style="display: flex; flex-direction: column; align-items: center; justify-content: center; font-family: sans-serif; margin: 10px 0;">
     <button id="record-btn" style="
         background-color: #2c2c2c;
@@ -140,32 +165,34 @@ components.html("""
     let mediaRecorder;
     let audioChunks = [];
 
-    recordBtn.addEventListener('click', async () => {
-        if (!isRecording) {
-            try {
-                const stream = await window.parent.navigator.mediaDevices.getUserMedia({ audio: true });
+    recordBtn.addEventListener('click', async () => {{
+        if (!isRecording) {{
+            try {{
+                const stream = await window.parent.navigator.mediaDevices.getUserMedia({{ audio: true }});
                 mediaRecorder = new MediaRecorder(stream);
                 audioChunks = [];
 
-                mediaRecorder.ondataavailable = event => { audioChunks.push(event.data); };
+                mediaRecorder.ondataavailable = event => {{ audioChunks.push(event.data); }};
 
-                mediaRecorder.onstop = () => {
-                    const audioBlob = new Blob(audioChunks, { type: 'audio/wav' });
+                mediaRecorder.onstop = () => {{
+                    const audioBlob = new Blob(audioChunks, {{ type: 'audio/wav' }});
                     const reader = new FileReader();
                     reader.readAsDataURL(audioBlob);
-                    reader.onloadend = () => {
+                    reader.onloadend = () => {{
                         const base64Data = reader.result.split(',')[1];
                         
-                        // Envoi sécurisé via URL
+                        // ON INJECTE L'AUDIO + LA CATEGORIE + LA PHRASE DANS L'URL DU PARENT
                         const parentUrl = new URL(window.parent.location.href);
                         parentUrl.searchParams.set('audio_data', base64Data);
-                        window.parent.history.replaceState({}, '', parentUrl.toString());
+                        parentUrl.searchParams.set('category', '{js_category}');
+                        parentUrl.searchParams.set('sentence', '{js_sentence}');
                         
+                        window.parent.history.replaceState({{}}, '', parentUrl.toString());
                         window.parent.document.querySelector('.stApp').dispatchEvent(new Event('readystatechange'));
                         window.parent.location.reload();
-                    };
+                    }};
                     stream.getTracks().forEach(track => track.stop());
-                };
+                }};
 
                 mediaRecorder.start();
                 isRecording = true;
@@ -175,11 +202,11 @@ components.html("""
                 recordBtn.style.boxShadow = '0 0 20px rgba(231, 76, 60, 0.5)';
                 statusText.innerText = 'Recording...';
                 statusText.style.color = '#e74c3c';
-            } catch (err) {
+            }} catch (err) {{
                 statusText.innerText = 'Mic Blocked';
                 console.error(err);
-            }
-        } else {
+            }}
+        }} else {{
             mediaRecorder.stop();
             isRecording = false;
             
@@ -188,8 +215,8 @@ components.html("""
             recordBtn.style.boxShadow = '0 8px 24px rgba(0,0,0,0.12)';
             statusText.innerText = 'Processing...';
             statusText.style.color = '#2c2c2c';
-        }
-    });
+        }}
+    }});
 </script>
 """, height=160)
 
@@ -213,6 +240,7 @@ with col2:
 # Si l'utilisateur veut recommencer
 if retry_clicked:
     st.session_state["saved_audio_base64"] = ""
+    st.query_params.clear()
     st.rerun()
 
 # Si l'utilisateur clique sur Analyse
