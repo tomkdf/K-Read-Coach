@@ -1,9 +1,9 @@
 def generate_feedback(score: float) -> str:
     if score >= 90:
-        return "Excellent! Your pronunciation is very accurate."
+        return "Отлично! Ваше произношение очень точное."
     elif score >= 75:
-        return "Good job! You're getting close to the target pronunciation."
+        return "Хорошая работа! Вы уже очень близки к идеалу."
     elif score >= 50:
-        return "Keep practicing! Focus on the highlighted differences."
+        return "Продолжайте практиковаться! Обратите внимание на выделенные различия."
     else:
-        return "Don't give up! Try listening to the reference audio again."
+        return "Не сдавайтесь! Попробуйте еще раз послушать эталонное аудио."

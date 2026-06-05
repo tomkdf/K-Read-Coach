@@ -7,7 +7,7 @@ import os
 csv_path = 'data/k_read_coach_dataset.csv'
 
 # Path to the full KSS dataset on your local machine
-source_folder = '/mnt/c/Users/tomke/Documents/archive/kss/' 
+source_folder = 'kss/' 
 
 # The target folder for our app's specific audio clips (flattened)
 destination_folder = 'data/clips/'
