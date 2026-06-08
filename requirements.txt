@@ -1,0 +1,14 @@
+# Serveur et Interface Graphique
+streamlit==1.57.0
+
+# Traitement de données et calculs de score
+pandas==3.0.3
+numpy==2.4.4
+Levenshtein==0.27.3
+jamo==0.4.1
+
+# Reconnaissance vocale (ASR)
+faster-whisper==1.2.1
+
+# Traduction automatique des scripts KSS en russe
+deep-translator==1.11.4
