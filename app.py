@@ -6,8 +6,6 @@ from modules.data_loader import load_dataset, get_categories, get_sentences_by_c
 from modules.asr_interface import transcribe_audio
 from modules.comparison import compare_texts
 from modules.feedback import generate_feedback
-import streamlit.components.v1 as components
-import base64
 
 DATA_PATH = "data/k_read_coach_dataset.csv"
 CLIPS_DIR = "data/clips"
@@ -65,7 +63,7 @@ with st.sidebar:
     st.caption("Практика разговорного корейского языка")
 
     if not is_real_dataset:
-        st.warning("Используются тестовые данные — поместите k_read_coach_dataset.csv in папку data/")
+        st.warning("Используются тестовые данные — поместите k_read_coach_dataset.csv в папку data/")
 
     categories = get_categories(df)
     
@@ -89,47 +87,13 @@ with st.sidebar:
     selected_sentence = st.selectbox("ПРЕДЛОЖЕНИЕ", sentences_list, index=default_sent_idx)
 
 
-# --- FONCTION DE RENDU POUR COLORATION ---
-def render_colored_sentence(target_text: str, char_colors: list = None):
-    """Génère le HTML pour colorer le texte de la phrase d'origine."""
-    if not char_colors or len(char_colors) != len(target_text):
-        return f'<div class="sentence-card">{html.escape(target_text)}</div>'
-    
-    html_content = ""
-    for i, char in enumerate(target_text):
-        color = char_colors[i]
-        if color == "#7f8c8d":  # Ponctuation ou espaces (Gris)
-            html_content += html.escape(char)
-        else:
-            # Le !important force l'application des couleurs malgré le CSS global
-            html_content += f'<span style="color: {color} !important;">{html.escape(char)}</span>'
-            
-    return f'<div class="sentence-card" style="color: initial;">{html_content}</div>'
-
-
 st.header("Практическое занятие")
 
 row = sentences_df[sentences_df["sentence"] == selected_sentence].iloc[0]
 target_sentence = row["sentence"]
 
-# --- INITIALISATION ET VÉRIFICATION DE LA SESSION ---
-if "analysis_result" not in st.session_state:
-    st.session_state["analysis_result"] = None
-
-if "current_sentence" not in st.session_state:
-    st.session_state["current_sentence"] = target_sentence
-
-# Si on change de phrase, on nettoie le cache d'analyse pour ne pas appliquer les couleurs à la phrase suivante
-if st.session_state["current_sentence"] != target_sentence:
-    st.session_state["current_sentence"] = target_sentence
-    st.session_state["analysis_result"] = None
-
-# --- AFFICHAGE DE LA PHRASE PRINCIPALE ---
-if st.session_state["analysis_result"] is not None and "char_colors" in st.session_state["analysis_result"]:
-    colored_html = render_colored_sentence(target_sentence, st.session_state["analysis_result"]["char_colors"])
-    st.markdown(colored_html, unsafe_allow_html=True)
-else:
-    st.markdown(render_colored_sentence(target_sentence), unsafe_allow_html=True)
+# Affichage de la phrase (Simple, propre et sans HTML dynamique capricieux)
+st.markdown(f'<div class="sentence-card">{html.escape(target_sentence)}</div>', unsafe_allow_html=True)
 
 # Перевод на русский
 st.write(f"**Перевод:** {row['russian_translation']}")
@@ -149,109 +113,17 @@ else:
 
 st.subheader("Ваше чтение")
 
-# --- ЗАПИСЬ ГОЛОСА И СЕССИЯ ---
-if "saved_audio_base64" not in st.session_state:
-    st.session_state["saved_audio_base64"] = ""
-
-if "audio_data" in query_params:
-    st.session_state["saved_audio_base64"] = query_params["audio_data"]
-    st.query_params.update({"category": selected_category, "sentence": selected_sentence})
-
-js_category = selected_category.replace("'", "\\'")
-js_sentence = selected_sentence.replace("'", "\\'")
-
-components.html(f"""
-<div id="recorder-container" style="display: flex; flex-direction: column; align-items: center; justify-content: center; font-family: sans-serif; margin: 10px 0;">
-    <button id="record-btn" style="
-        background-color: #2c2c2c;
-        color: white;
-        border: none;
-        border-radius: 50%;
-        width: 90px;
-        height: 90px;
-        cursor: pointer;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        box-shadow: 0 8px 24px rgba(0,0,0,0.12);
-        transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
-        outline: none;
-    ]">
-        <svg id="mic-icon" width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
-            <path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"></path>
-            <path d="M19 10v2a7 7 0 0 1-14 0v-2"></path>
-            <line x1="12" y1="19" x2="12" y2="23"></line>
-            <line x1="8" y1="23" x2="16" y2="23"></line>
-        </svg>
-    </button>
-    <p id="status-text" style="color: #2c2c2c; font-weight: 600; font-size: 14px; margin-top: 16px; letter-spacing: 0.5px; text-transform: uppercase;">Нажмите для записи</p>
-</div>
-
-<script>
-    const recordBtn = document.getElementById('record-btn');
-    const statusText = document.getElementById('status-text');
-    let isRecording = false;
-    let mediaRecorder;
-    let audioChunks = [];
-
-    recordBtn.addEventListener('click', async () => {{
-        if (!isRecording) {{
-            try {{
-                const stream = await window.parent.navigator.mediaDevices.getUserMedia({{ audio: true }});
-                mediaRecorder = new MediaRecorder(stream);
-                audioChunks = [];
-
-                mediaRecorder.ondataavailable = event => {{ audioChunks.push(event.data); }};
-
-                mediaRecorder.onstop = () => {{
-                    const audioBlob = new Blob(audioChunks, {{ type: 'audio/wav' }});
-                    const reader = new FileReader();
-                    reader.readAsDataURL(audioBlob);
-                    reader.onloadend = () => {{
-                        const base64Data = reader.result.split(',')[1];
-                        
-                        const parentUrl = new URL(window.parent.location.href);
-                        parentUrl.searchParams.set('audio_data', base64Data);
-                        parentUrl.searchParams.set('category', '{js_category}');
-                        parentUrl.searchParams.set('sentence', '{js_sentence}');
-                        
-                        window.parent.history.replaceState({{}}, '', parentUrl.toString());
-                        window.parent.document.querySelector('.stApp').dispatchEvent(new Event('readystatechange'));
-                        window.parent.location.reload();
-                    }};
-                    stream.getTracks().forEach(track => track.stop());
-                }};
-
-                mediaRecorder.start();
-                isRecording = true;
-                
-                recordBtn.style.backgroundColor = '#e74c3c';
-                recordBtn.style.transform = 'scale(1.1)';
-                recordBtn.style.boxShadow = '0 0 20px rgba(231, 76, 60, 0.5)';
-                statusText.innerText = 'Запись...';
-                statusText.style.color = '#e74c3c';
-            }} catch (err) {{
-                statusText.innerText = 'Микрофон заблокирован';
-                console.error(err);
-            }}
-        }} else {{
-            mediaRecorder.stop();
-            isRecording = false;
-            
-            recordBtn.style.backgroundColor = '#2c2c2c';
-            recordBtn.style.transform = 'scale(1)';
-            recordBtn.style.boxShadow = '0 8px 24px rgba(0,0,0,0.12)';
-            statusText.innerText = 'Обработка...';
-            statusText.style.color = '#2c2c2c';
-        }}
-    }});
-</script>
-""", height=160)
+if "audio_input_nonce" not in st.session_state:
+    st.session_state["audio_input_nonce"] = 0
 
 audio_bytes = None
-if st.session_state["saved_audio_base64"]:
-    audio_bytes = base64.b64decode(st.session_state["saved_audio_base64"])
-    st.audio(audio_bytes, format="audio/wav")
+recorded_audio = st.audio_input(
+    "Нажмите, чтобы записать свое чтение",
+    key=f"user_audio_{st.session_state['audio_input_nonce']}",
+)
+if recorded_audio is not None:
+    audio_bytes = recorded_audio.getvalue()
+    st.audio(audio_bytes, format=recorded_audio.type or "audio/wav")
 
 st.markdown("---")
 
@@ -264,8 +136,7 @@ with col2:
     retry_clicked = st.button("🔄 Сбросить", type="secondary", use_container_width=True)
 
 if retry_clicked:
-    st.session_state["saved_audio_base64"] = ""
-    st.session_state["analysis_result"] = None
+    st.session_state["audio_input_nonce"] += 1
     st.query_params.clear()
     st.rerun()
 
@@ -287,71 +158,64 @@ if analyze_clicked:
                     if not recognized:
                         st.warning("Мы не смогли вас расслышать. Пожалуйста, поднесите микрофон ближе!")
                         st.stop()
-                    duration_seconds = len(audio_bytes) / 32000
+                    
+                    # Estimation du temps basée sur la taille du fichier pour la fluidité
+                    duration_seconds = len(audio_bytes) / 96000
+                    if duration_seconds < 0.5:
+                        duration_seconds = 1.0
 
-                    # Comparaison et stockage IMMÉDIAT en session_state avant le rechargement
+                    # Calcul des scores
                     result = compare_texts(target_sentence, recognized, audio_duration=duration_seconds)
-                    st.session_state["analysis_result"] = result
+                    feedback = generate_feedback(result["score"])
                 finally:
                     Path(path).unlink(missing_ok=True)
 
-            # Relance l'application : l'affichage du haut va maintenant lire l'analysis_result coloré !
-            st.rerun()
+            # --- РЕЗУЛЬТАТЫ АНАЛИЗА ---
+            st.success("🎉 Анализ завершен!")
+            st.subheader("📊 Результаты проверки")
+            
+            st.markdown(f"""
+                <div style="background-color: white; padding: 24px; border-radius: 12px; border: 1px solid #e8e0d8; margin-bottom: 20px;">
+                    <p style="margin:0 0 8px 0; color:#7f8c8d; text-transform: uppercase; font-size:12px; font-weight:bold; letter-spacing:0.5px;">Что услышал тренер</p>
+                    <p style="margin:0; font-size: 22px; font-weight: bold; color: #2c2c2c;">{result['recognized']}</p>
+                </div>
+            """, unsafe_allow_html=True)
+            
+            # Affichage des deux colonnes : Prononciation et Fluidité
+            col_pron, col_fluid = st.columns(2)
+            
+            with col_pron:
+                st.markdown(f"""
+                    <div style="background-color: #fcfbfa; padding: 16px; border-radius: 8px; border-left: 5px solid #3498db; text-align: center;">
+                        <p style="margin:0; color:#7f8c8d; font-size:13px; font-weight:bold;">🗣️ Произношение</p>
+                        <p style="margin:5px 0 0 0; font-size: 24px; font-weight: bold; color: #2980b9;">{result['pronunciation_score']:.0f} <span style="font-size:14px; color:#95a5a6;">/ 100</span></p>
+                    </div>
+                """, unsafe_allow_html=True)
+                
+            with col_fluid:
+                rate = result['speech_rate']
+                emoji_speed = "🐢" if rate < 2.0 else ("⚡" if rate > 4.0 else "🏃‍♂️")
+                    
+                st.markdown(f"""
+                    <div style="background-color: #fcfbfa; padding: 16px; border-radius: 8px; border-left: 5px solid #2ecc71; text-align: center;">
+                        <p style="margin:0; color:#7f8c8d; font-size:13px; font-weight:bold;">⏱️ Беглость ({emoji_speed} {rate:.1f} сил/сек)</p>
+                        <p style="margin:5px 0 0 0; font-size: 24px; font-weight: bold; color: #27ae60;">{result['fluidity_score']:.0f} <span style="font-size:14px; color:#95a5a6;">/ 100</span></p>
+                    </div>
+                """, unsafe_allow_html=True)
+                
+            st.write("")
+            
+            score = result["score"]
+            if score >= 80:
+                st.balloons()
+                st.markdown(f"<h3 style='color: #27ae60; margin:0;'>🎯 Общая оценка: {score:.1f} / 100 (Отлично!)</h3>", unsafe_allow_html=True)
+            elif score >= 50:
+                st.markdown(f"<h3 style='color: #f39c12; margin:0;'>🏃‍♂️ Общая оценка: {score:.1f} / 100 (Хорошее начало)</h3>", unsafe_allow_html=True)
+            else:
+                st.markdown(f"<h3 style='color: #c0392b; margin:0;'>💪 Общая оценка: {score:.1f} / 100 (Нужно потренироваться)</h3>", unsafe_allow_html=True)
+                
+            st.progress(max(0.0, min(1.0, score / 100)))
+            st.write(f"💬 **Совет тренера:** {feedback}")
             
         except Exception as e:
             st.error(f"Ошибка анализа: {e}")
-
-# --- AFFICHAGE DES RÉSULTATS DÉTAILLÉS DESOUS LA LIGNE ---
-if st.session_state["analysis_result"] is not None:
-    result = st.session_state["analysis_result"]
-    feedback = generate_feedback(result["score"])
-    
-    st.success("🎉 Анализ завершен!")
-    st.subheader("📊 Результаты проверки")
-    
-    st.markdown(f"""
-        <div style="background-color: white; padding: 24px; border-radius: 12px; border: 1px solid #e8e0d8; margin-bottom: 20px;">
-            <p style="margin:0 0 8px 0; color:#7f8c8d; text-transform: uppercase; font-size:12px; font-weight:bold; letter-spacing:0.5px;">Что услышал тренер</p>
-            <p style="margin:0; font-size: 22px; font-weight: bold; color: #2c2c2c;">{result['recognized']}</p>
-        </div>
-    """, unsafe_allow_html=True)
-    
-    col_pron, col_fluid = st.columns(2)
-    
-    with col_pron:
-        st.markdown(f"""
-            <div style="background-color: #fcfbfa; padding: 16px; border-radius: 8px; border-left: 5px solid #3498db; text-align: center;">
-                <p style="margin:0; color:#7f8c8d; font-size:13px; font-weight:bold;">🗣️ Произношение</p>
-                <p style="margin:5px 0 0 0; font-size: 24px; font-weight: bold; color: #2980b9;">{result['pronunciation_score']:.0f} <span style="font-size:14px; color:#95a5a6;">/ 100</span></p>
-            </div>
-        """, unsafe_allow_html=True)
-        
-    with col_fluid:
-        rate = result['speech_rate']
-        if rate < 2.0:
-            emoji_speed = "🐢"
-        elif rate > 4.0:
-            emoji_speed = "⚡"
-        else:
-            emoji_speed = "🏃‍♂️"
-            
-        st.markdown(f"""
-            <div style="background-color: #fcfbfa; padding: 16px; border-radius: 8px; border-left: 5px solid #2ecc71; text-align: center;">
-                <p style="margin:0; color:#7f8c8d; font-size:13px; font-weight:bold;">⏱️ Беглость ({emoji_speed} {rate:.1f} сил/сек)</p>
-                <p style="margin:5px 0 0 0; font-size: 24px; font-weight: bold; color: #27ae60;">{result['fluidity_score']:.0f} <span style="font-size:14px; color:#95a5a6;">/ 100</span></p>
-            </div>
-        """, unsafe_allow_html=True)
-        
-    st.write("")
-    
-    score = result["score"]
-    if score >= 80:
-        st.balloons()
-        st.markdown(f"<h3 style='color: #27ae60; margin:0;'>🎯 Общая оценка: {score:.1f} / 100 (Отлично!)</h3>", unsafe_allow_html=True)
-    elif score >= 50:
-        st.markdown(f"<h3 style='color: #f39c12; margin:0;'>🏃‍♂️ Общая оценка: {score:.1f} / 100 (Хорошее начало)</h3>", unsafe_allow_html=True)
-    else:
-        st.markdown(f"<h3 style='color: #c0392b; margin:0;'>💪 Общая оценка: {score:.1f} / 100 (Нужно потренироваться)</h3>", unsafe_allow_html=True)
-        
-    st.progress(max(0.0, min(1.0, score / 100)))
-    st.write(f"💬 **Совет тренера:** {feedback}")
