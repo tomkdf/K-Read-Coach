@@ -20,7 +20,7 @@ Follow these steps to set up and run the application on any local machine (Linux
 
 ### 1. Clone the Repository
 ```bash
-git clone <YOUR_GITHUB_REPOSITORY_URL>
+git clone https://github.com/tomkdf/K-Read-Coach
 cd K-Read-Coach
 ```
 
@@ -30,13 +30,13 @@ It is highly recommended to isolate the project requirements using a Python virt
 
 On Linux / macOS:
 ```bash
-  python3 -m venv venv
-  source venv/bin/activate
+python3 -m venv venv
+source venv/bin/activate
 ```
 On Windows (PowerShell):
 ```bash
-  python -m venv venv
-  .\venv\Scripts\Activate.ps1
+python -m venv venv
+.\venv\Scripts\Activate.ps1
 ```
 
 ### 3. Install Dependencies
@@ -53,7 +53,7 @@ streamlit run app.py
 ```
 Open your browser and navigate to http://localhost:8501 to begin practicing!
 
-### 📂 Project Architecture
+## 📂 Project Architecture
 
 ```bash
 K-Read-Coach/
@@ -82,12 +82,12 @@ Open dataset_cleaning.py and tweak the num_sentences parameter or adjust the tar
 Re-run the data processing engine:
 
 ```bash
-python dataset_cleaning.py
+python3 dataset_cleaning.py
 ```
 Sync and match your file paths with the target reference waveforms:
 
 ```bash
-python extract_audio.py
+python3 extract_audio.py
 ```
 ---
 

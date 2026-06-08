@@ -25,6 +25,7 @@ st.markdown("""
     font-size: 28px;
     text-align: center;
     font-weight: bold;
+    color: #2c2c2c;
 }
 
 .stButton > button[kind="primary"] {
@@ -64,7 +65,7 @@ with st.sidebar:
     st.caption("Практика разговорного корейского языка")
 
     if not is_real_dataset:
-        st.warning("Используются тестовые данные — поместите k_read_coach_dataset.csv в папку data/")
+        st.warning("Используются тестовые данные — поместите k_read_coach_dataset.csv in папку data/")
 
     categories = get_categories(df)
     
@@ -87,14 +88,50 @@ with st.sidebar:
         
     selected_sentence = st.selectbox("ПРЕДЛОЖЕНИЕ", sentences_list, index=default_sent_idx)
 
+
+# --- FONCTION DE RENDU POUR COLORATION ---
+def render_colored_sentence(target_text: str, char_colors: list = None):
+    """Génère le HTML pour colorer le texte de la phrase d'origine."""
+    if not char_colors or len(char_colors) != len(target_text):
+        return f'<div class="sentence-card">{html.escape(target_text)}</div>'
+    
+    html_content = ""
+    for i, char in enumerate(target_text):
+        color = char_colors[i]
+        if color == "#7f8c8d":  # Ponctuation ou espaces (Gris)
+            html_content += html.escape(char)
+        else:
+            # Le !important force l'application des couleurs malgré le CSS global
+            html_content += f'<span style="color: {color} !important;">{html.escape(char)}</span>'
+            
+    return f'<div class="sentence-card" style="color: initial;">{html_content}</div>'
+
+
 st.header("Практическое занятие")
 
 row = sentences_df[sentences_df["sentence"] == selected_sentence].iloc[0]
 target_sentence = row["sentence"]
 
-st.markdown(f'<div class="sentence-card">{html.escape(target_sentence)}</div>', unsafe_allow_html=True)
+# --- INITIALISATION ET VÉRIFICATION DE LA SESSION ---
+if "analysis_result" not in st.session_state:
+    st.session_state["analysis_result"] = None
 
-# Перевод на русский (английский удален)
+if "current_sentence" not in st.session_state:
+    st.session_state["current_sentence"] = target_sentence
+
+# Si on change de phrase, on nettoie le cache d'analyse pour ne pas appliquer les couleurs à la phrase suivante
+if st.session_state["current_sentence"] != target_sentence:
+    st.session_state["current_sentence"] = target_sentence
+    st.session_state["analysis_result"] = None
+
+# --- AFFICHAGE DE LA PHRASE PRINCIPALE ---
+if st.session_state["analysis_result"] is not None and "char_colors" in st.session_state["analysis_result"]:
+    colored_html = render_colored_sentence(target_sentence, st.session_state["analysis_result"]["char_colors"])
+    st.markdown(colored_html, unsafe_allow_html=True)
+else:
+    st.markdown(render_colored_sentence(target_sentence), unsafe_allow_html=True)
+
+# Перевод на русский
 st.write(f"**Перевод:** {row['russian_translation']}")
 
 st.subheader("Эталонное произношение")
@@ -228,6 +265,7 @@ with col2:
 
 if retry_clicked:
     st.session_state["saved_audio_base64"] = ""
+    st.session_state["analysis_result"] = None
     st.query_params.clear()
     st.rerun()
 
@@ -249,33 +287,71 @@ if analyze_clicked:
                     if not recognized:
                         st.warning("Мы не смогли вас расслышать. Пожалуйста, поднесите микрофон ближе!")
                         st.stop()
-                    result = compare_texts(target_sentence, recognized)
-                    feedback = generate_feedback(result["score"])
+                    duration_seconds = len(audio_bytes) / 32000
+
+                    # Comparaison et stockage IMMÉDIAT en session_state avant le rechargement
+                    result = compare_texts(target_sentence, recognized, audio_duration=duration_seconds)
+                    st.session_state["analysis_result"] = result
                 finally:
                     Path(path).unlink(missing_ok=True)
 
-            # --- РЕЗУЛЬТАТЫ АНАЛИЗА ---
-            st.success("🎉 Анализ завершен!")
-            st.subheader("📊 Результаты проверки")
-            
-            st.markdown(f"""
-                <div style="background-color: white; padding: 24px; border-radius: 12px; border: 1px solid #e8e0d8; margin-bottom: 20px;">
-                    <p style="margin:0 0 8px 0; color:#7f8c8d; text-transform: uppercase; font-size:12px; font-weight:bold; letter-spacing:0.5px;">Что услышал тренер</p>
-                    <p style="margin:0; font-size: 22px; font-weight: bold; color: #2c2c2c;">{result['recognized']}</p>
-                </div>
-            """, unsafe_allow_html=True)
-            
-            score = result["score"]
-            if score >= 80:
-                st.balloons()
-                st.markdown(f"<h3 style='color: #27ae60; margin:0;'>🎯 Оценка: {score:.1f} / 100 (Отлично!)</h3>", unsafe_allow_html=True)
-            elif score >= 50:
-                st.markdown(f"<h3 style='color: #f39c12; margin:0;'>🏃‍♂️ Оценка: {score:.1f} / 100 (Хорошее начало)</h3>", unsafe_allow_html=True)
-            else:
-                st.markdown(f"<h3 style='color: #c0392b; margin:0;'>💪 Оценка: {score:.1f} / 100 (Нужно потренироваться)</h3>", unsafe_allow_html=True)
-                
-            st.progress(max(0.0, min(1.0, score / 100)))
-            st.write(f"💬 **Совет тренера:** {feedback}")
+            # Relance l'application : l'affichage du haut va maintenant lire l'analysis_result coloré !
+            st.rerun()
             
         except Exception as e:
             st.error(f"Ошибка анализа: {e}")
+
+# --- AFFICHAGE DES RÉSULTATS DÉTAILLÉS DESOUS LA LIGNE ---
+if st.session_state["analysis_result"] is not None:
+    result = st.session_state["analysis_result"]
+    feedback = generate_feedback(result["score"])
+    
+    st.success("🎉 Анализ завершен!")
+    st.subheader("📊 Результаты проверки")
+    
+    st.markdown(f"""
+        <div style="background-color: white; padding: 24px; border-radius: 12px; border: 1px solid #e8e0d8; margin-bottom: 20px;">
+            <p style="margin:0 0 8px 0; color:#7f8c8d; text-transform: uppercase; font-size:12px; font-weight:bold; letter-spacing:0.5px;">Что услышал тренер</p>
+            <p style="margin:0; font-size: 22px; font-weight: bold; color: #2c2c2c;">{result['recognized']}</p>
+        </div>
+    """, unsafe_allow_html=True)
+    
+    col_pron, col_fluid = st.columns(2)
+    
+    with col_pron:
+        st.markdown(f"""
+            <div style="background-color: #fcfbfa; padding: 16px; border-radius: 8px; border-left: 5px solid #3498db; text-align: center;">
+                <p style="margin:0; color:#7f8c8d; font-size:13px; font-weight:bold;">🗣️ Произношение</p>
+                <p style="margin:5px 0 0 0; font-size: 24px; font-weight: bold; color: #2980b9;">{result['pronunciation_score']:.0f} <span style="font-size:14px; color:#95a5a6;">/ 100</span></p>
+            </div>
+        """, unsafe_allow_html=True)
+        
+    with col_fluid:
+        rate = result['speech_rate']
+        if rate < 2.0:
+            emoji_speed = "🐢"
+        elif rate > 4.0:
+            emoji_speed = "⚡"
+        else:
+            emoji_speed = "🏃‍♂️"
+            
+        st.markdown(f"""
+            <div style="background-color: #fcfbfa; padding: 16px; border-radius: 8px; border-left: 5px solid #2ecc71; text-align: center;">
+                <p style="margin:0; color:#7f8c8d; font-size:13px; font-weight:bold;">⏱️ Беглость ({emoji_speed} {rate:.1f} сил/сек)</p>
+                <p style="margin:5px 0 0 0; font-size: 24px; font-weight: bold; color: #27ae60;">{result['fluidity_score']:.0f} <span style="font-size:14px; color:#95a5a6;">/ 100</span></p>
+            </div>
+        """, unsafe_allow_html=True)
+        
+    st.write("")
+    
+    score = result["score"]
+    if score >= 80:
+        st.balloons()
+        st.markdown(f"<h3 style='color: #27ae60; margin:0;'>🎯 Общая оценка: {score:.1f} / 100 (Отлично!)</h3>", unsafe_allow_html=True)
+    elif score >= 50:
+        st.markdown(f"<h3 style='color: #f39c12; margin:0;'>🏃‍♂️ Общая оценка: {score:.1f} / 100 (Хорошее начало)</h3>", unsafe_allow_html=True)
+    else:
+        st.markdown(f"<h3 style='color: #c0392b; margin:0;'>💪 Общая оценка: {score:.1f} / 100 (Нужно потренироваться)</h3>", unsafe_allow_html=True)
+        
+    st.progress(max(0.0, min(1.0, score / 100)))
+    st.write(f"💬 **Совет тренера:** {feedback}")
